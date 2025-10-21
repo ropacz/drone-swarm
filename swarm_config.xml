@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+===================================================================================
+CONFIGURAÇÃO IPv4 - Enxame de Drones
+===================================================================================
+Ref: RFC 3561 (AODV), Bekmezci et al. (2013)
+===================================================================================
+-->
+
+<config>
+    <!-- Drones: 10.1.x.x -->
+    <interface hosts="drone[*]" address="10.1.x.x" netmask="255.255.0.0"/>
+    
+    <!-- GCS: 10.0.0.x -->
+    <interface hosts="gcs[*]" address="10.0.0.x" netmask="255.255.255.0"/>
+    
+    <!-- Multicast para coordenação de enxame -->
+    <multicast-group hosts="drone[*]" address="224.0.0.1" interfaces="wlan0"/>
+</config>

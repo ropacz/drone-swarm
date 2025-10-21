@@ -1,0 +1,74 @@
+# OMNeT++ / INET Framework
+
+# Build directories
+out/
+src/out/
+simulations/out/
+
+# Generated Makefiles
+src/Makefile
+simulations/Makefile
+**/Makefile.vc
+
+# Compiled object files
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+
+# Executables
+drone-sar
+src/drone-sar
+*.exe
+
+# Results and logs
+results/
+*.sca
+*.vec
+*.vci
+*.anf
+
+# Temporary files
+*.pcap
+*.log
+*.err
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Qt/Qtenv cache
+.qtenvrc
+.tkenvrc
+.tkenvlog
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+.env
+venv/
+env/
+
+# Documentation
+doc/
+html/
+latex/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Configuration overrides (keep template/example configs)
+local.ini
+personal.ini

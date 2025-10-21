@@ -1,0 +1,4 @@
+#!/bin/sh
+cd `dirname $0`
+../src/drone_sar -n .:../src $*
+# for shared lib, use: opp_run -l ../src/drone_sar -n .:../src $*
