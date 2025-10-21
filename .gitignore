@@ -26,6 +26,7 @@ src/drone-sar
 
 # Results and logs
 results/
+simulations/results/
 *.sca
 *.vec
 *.vci
