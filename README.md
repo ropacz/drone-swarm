@@ -74,6 +74,17 @@ Results are saved in `simulations/results/`:
 - `*.vec`: Vector data (time series)
 - `*.vci`: Vector index files
 
+### 📊 Results Analysis
+
+Generate Bat Algorithm performance visualizations:
+
+```bash
+./analyze.sh all                              # All configs
+./analyze.sh DroneSwarm5km                    # Specific config
+```
+
+**5 publication-ready figures:** UAV performance, statistical distribution, consistency analysis, swarm efficiency, performance heatmap. See [ANALYSIS.md](ANALYSIS.md) for details.
+
 ---
 
 ## Routing Protocol - Bat Algorithm
