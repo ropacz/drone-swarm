@@ -30,6 +30,7 @@ import inet.node.inet.AdhocHost;
 //===================================================================================
 // Mobile node with mesh routing and wireless communication
 // Base: INET AdhocHost (standard for MANET/FANET nodes)
+// Routing: AODV (Ad-hoc On-Demand Distance Vector) for multi-hop mesh
 //===================================================================================
 module Drone extends AdhocHost
 {
@@ -47,6 +48,7 @@ module Drone extends AdhocHost
 // MODULE: Ground Control Station (GCS)
 //===================================================================================
 // Stationary base station for monitoring and control
+// Routing: AODV enabled for mesh network participation
 //===================================================================================
 module GCS extends AdhocHost
 {
@@ -68,12 +70,13 @@ module GCS extends AdhocHost
 network DroneSwarmNetwork
 {
     parameters:
-        int numDrones = default(10);        // Swarm size (5-20 typical)
+        int numDrones = default(15);        // Swarm size (optimized for 4km² area)
         int numGCS = default(1);            // Ground control stations
         
-        // Canvas: 5km × 5km (1:1 coordinate mapping)
+        // Canvas: 4km × 4km (1:1 coordinate mapping with 100m grid)
         // Ref: [3] Hayat et al. (2016) "Survey on UAV networks for disaster relief"
-        @display("bgb=5000,5000");
+        @display("bgb=4000,4000;bgg=100,1,grey95");
+        @figure[title](type=text; pos=2000,100; anchor=c; text="FANET Drone Swarm - SAR Operations"; font="Arial,18,bold"; color=darkblue);
         
     submodules:
         //-------------------------------------------------------------------------------
