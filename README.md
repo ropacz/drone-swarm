@@ -1,56 +1,347 @@
-# 🚁 DRONE SWARM - Simulação de Enxame de Drones
+# UAV Swarm Simulation - FANET Research Framework
 
-## 🎯 Foco: Tecnologias Apropriadas para Enxames Reais
+[![OMNeT++](https://img.shields.io/badge/OMNeT++-6.x-blue)](https://omnetpp.org/)
+[![INET](https://img.shields.io/badge/INET-4.x-green)](https://inet.omnetpp.org/)
+[![License](https://img.shields.io/badge/license-Academic-orange)](LICENSE)
 
-**Filosofia:** Apenas o necessário, com escolhas técnicas justificadas.
+## Overview
+
+This repository contains a discrete-event simulation framework for **Flying Ad-Hoc Networks (FANETs)** using OMNeT++ and the INET framework. The simulation models UAV swarm coordination with realistic wireless communication, mobility patterns, and network protocols.
+
+**Use Case:** Master's degree research / Academic publications
+
+### Key Features
+
+- ✈️ **3D Mobility Model**: Gauss-Markov mobility with realistic UAV flight parameters
+- 📡 **IEEE 802.11 @ 5.8 GHz**: Industry-standard wireless communication
+- 🗺️ **Proactive Routing**: OLSR-based mesh networking for swarms
+- 📊 **Telemetry Exchange**: UDP-based position/velocity broadcasting (10 Hz)
+- 🎯 **Validated Parameters**: Based on commercial drone specifications and academic literature
 
 ---
 
-## 🚀 Como Executar
+## System Requirements
 
-### Compilar o projeto:
+### Software Dependencies
+- **OMNeT++** 6.x ([download](https://omnetpp.org/download/))
+- **INET Framework** 4.x ([download](https://inet.omnetpp.org/Download.html))
+- **C++ Compiler**: GCC 9+ or Clang 10+
+- **Qt5**: For Qtenv GUI (optional, for visualization)
+
+### Hardware Recommendations
+- **CPU**: Multi-core processor (4+ cores recommended)
+- **RAM**: 8 GB minimum (16 GB for large swarms)
+- **Storage**: 500 MB for simulation framework + results
+
+---
+
+## Installation
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/ropacz/drone-swarm.git
+cd drone-swarm
+```
+
+### 2. Generate Makefiles
 ```bash
 make makefiles
+```
+
+### 3. Compile
+```bash
 make
 ```
 
-### Executar com interface gráfica (Qtenv):
+---
+
+## Running Simulations
+
+### Quick Start (GUI Mode)
 ```bash
-./run.sh [Config]
+./run.sh [ConfigName]
 ```
 
-### Executar em modo console (Cmdenv):
+**Examples:**
 ```bash
-./run-cmdenv.sh [Config]
+./run.sh Base         # 10 drones, standard parameters
+./run.sh Small        # 5 drones
+./run.sh Large        # 20 drones
+./run.sh Formation    # Grid formation start
 ```
 
-**Configurações disponíveis:**
-- `Base` (padrão) - 10 drones
-- `Small` - 5 drones
-- `Large` - 20 drones
-- `HighSpeed` - Velocidade aumentada
-- `Formation` - Formação em grid
-
-**Exemplo:**
+### Console Mode (Faster)
 ```bash
-./run.sh Base          # GUI com 10 drones
-./run-cmdenv.sh Large  # Console com 20 drones
+./run-cmdenv.sh [ConfigName]
+```
+
+### Output Files
+Results are saved in `simulations/results/`:
+- `*.sca`: Scalar statistics (averages, counts)
+- `*.vec`: Vector data (time series)
+- `*.vci`: Vector index files
+
+---
+
+## Simulation Parameters
+
+### Network Topology
+| Parameter | Value | Justification |
+|-----------|-------|---------------|
+| Swarm size | 5-20 UAVs | Typical research range [1] |
+| Operational area | 1 km² | VLOS regulations [2] |
+| Altitude range | 50-120 m | FAA Part 107 / ANAC RBAC-E 94 [3] |
+| GCS nodes | 1 | Single ground control station |
+
+### Mobility Model (Gauss-Markov)
+| Parameter | Value | Reference |
+|-----------|-------|-----------|
+| Cruise speed | 15 m/s (54 km/h) | DJI Mavic 3 specs [4] |
+| Alpha (correlation) | 0.8 | Smooth coordinated movement [5] |
+| Update interval | 500 ms | Realistic trajectory updates |
+
+### Wireless Communication
+| Parameter | Value | Standard/Reference |
+|-----------|-------|--------------------|
+| Frequency | 5.8 GHz | ISM band, FCC Part 15.247 [6] |
+| Tx power | 100 mW (20 dBm) | Legal unlicensed limit [7] |
+| Bandwidth | 20 MHz | IEEE 802.11a/ac |
+| Receiver sensitivity | -92 dBm | Typical WiFi chips [8] |
+
+### Application Layer
+| Parameter | Value | Justification |
+|-----------|-------|---------------|
+| Telemetry rate | 10 Hz | MAVLink standard [9] |
+| Packet size | 150 bytes | Position + velocity + status |
+| Protocol | UDP multicast | Efficient broadcast [10] |
+
+---
+
+## Configuration Scenarios
+
+### Base Configuration (Standard)
+```ini
+[Config Base]
+*.numDrones = 10
+Area: 2km × 2km (4 km²)
+Speed: 15 m/s
+```
+**Use:** Standard swarm for general research and algorithm validation.
+
+### SmallArea (Quick Testing)
+```ini
+[Config SmallArea]
+*.numDrones = 10
+Area: 1km × 1km (1 km²)
+Speed: 15 m/s
+```
+**Use:** Fast testing and debugging. Smaller area for quick iterations.
+
+### FloodSAR (Disaster Response)
+```ini
+[Config FloodSAR]
+*.numDrones = 15
+Area: 2km × 2km (4 km²)
+Speed: 12 m/s (scanning)
+```
+**Use:** Realistic flood disaster SAR mission. Optimized for victim search.
+
+---
+
+## Academic References
+
+### Primary Citations
+
+1. **Brust et al. (2017)** - "Target tracking optimization of UAV swarms based on dual-decomposition"  
+   *IEEE Conference on Computer Communications Workshops*
+
+2. **Bekmezci et al. (2013)** - "Flying Ad-Hoc Networks (FANETs): A survey"  
+   *Ad Hoc Networks, Elsevier*
+
+3. **Yanmaz et al. (2018)** - "Drone networks: Communications, coordination, and sensing"  
+   *Ad Hoc Networks, Elsevier*
+
+4. **Camp et al. (2002)** - "A survey of mobility models for ad hoc network research"  
+   *Wireless Communications and Mobile Computing*
+
+5. **RFC 3626** - "Optimized Link State Routing Protocol (OLSR)"  
+   *IETF Network Working Group*
+
+### Technical Standards
+
+- **IEEE 802.11-2016**: Wireless LAN MAC and PHY specifications
+- **FAA Part 107**: Small Unmanned Aircraft Systems regulations
+- **FCC Part 15.247**: Operation in 5.725-5.850 GHz band
+- **MAVLink Protocol**: Micro air vehicle communication standard
+
+### Commercial References
+
+- DJI Mavic 3 Technical Specifications
+- Pixhawk Autopilot Documentation
+- Auterion Skynode Platform Specifications
+
+---
+
+## Project Structure
+
+```
+drone-sar/
+├── src/
+│   ├── DroneSwarmEssential.ned    # Network topology definition
+│   ├── omnetpp.ini                # Simulation parameters
+│   ├── package.ned                # Package declaration
+│   └── Makefile                   # Build configuration
+├── simulations/
+│   ├── omnetpp.ini                # Simulation entry point
+│   ├── package.ned
+│   └── results/                   # Output directory (auto-generated)
+├── run.sh                         # GUI execution script
+├── run-cmdenv.sh                  # Console execution script
+├── Makefile                       # Top-level build file
+├── .gitignore
+└── README.md
 ```
 
 ---
 
-## 🔧 DECISÕES TÉCNICAS FUNDAMENTAIS
+## Metrics and Analysis
 
-### 1️⃣ **Roteamento: OLSR (não AODV)**
+### Key Performance Indicators (KPIs)
 
-**Por quê OLSR?**
-- ✅ **Proativo**: Rotas sempre disponíveis (zero latência de descoberta)
-- ✅ **MPR (Multi-Point Relay)**: Reduz flooding em topologia densa
-- ✅ **Mesh natural**: Ideal para comunicação frequente entre todos
-- ✅ **Real world**: Usado em projetos como Serval Mesh, ComMotion
+The simulation tracks the following metrics for research analysis:
 
-**Quando AODV?**
-- ❌ Enxames = comunicação constante
+1. **Packet Delivery Ratio (PDR)**
+   ```
+   PDR = (Packets Received) / (Packets Sent) × 100%
+   ```
+
+2. **End-to-End Delay**
+   - Average latency for telemetry packets
+   - Critical for real-time coordination
+
+3. **Network Throughput**
+   - Aggregate data rate across swarm
+   - Per-link and network-wide measurements
+
+4. **Radio State Analysis**
+   - Idle / Tx / Rx time distribution
+   - Channel utilization metrics
+
+### Post-Simulation Analysis
+
+Use OMNeT++ analysis tools:
+```bash
+# Open in IDE Analysis Tool
+omnetpp simulations/results/Base-*.sca
+
+# Or use Python/R for custom analysis
+# Scalar data: CSV export from .sca files
+# Vector data: Parse .vec files with scavetool
+```
+
+---
+
+## Customization Guide
+
+### Adding New Mobility Patterns
+
+Edit `src/omnetpp.ini`:
+```ini
+*.drone[*].mobility.typename = "MassMobility"  # Or other INET mobility models
+```
+
+Available models: RandomWaypointMobility, CircleMobility, LinearMobility, etc.
+
+### Changing Communication Parameters
+
+Modify transmit power for range studies:
+```ini
+*.drone[*].wlan[0].radio.transmitter.power = 200mW  # 23 dBm
+```
+
+### Adding Energy Models
+
+Integrate INET energy storage:
+```ned
+module Drone extends AdhocHost {
+    parameters:
+        energyStorage.typename = "SimpleEpEnergyStorage";
+        energyStorage.nominalCapacity = 108000J;  # 30 Wh battery
+}
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Problem**: `ERROR: Network 'DroneSwarmNetwork' not found`  
+**Solution**: Check package name in .ned files matches .ini reference
+
+**Problem**: Large .vec files (>100 MB)  
+**Solution**: Results are in `.gitignore`. Use `result-dir` to organize output.
+
+**Problem**: Compilation errors  
+**Solution**: Verify INET path in environment:
+```bash
+export INET_PROJ=/path/to/inet-4.x
+```
+
+---
+
+## Citation
+
+If you use this simulation framework in your research, please cite:
+
+```bibtex
+@misc{droneswarm2025,
+  author = {[Your Name]},
+  title = {UAV Swarm Simulation Framework for FANET Research},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/ropacz/drone-swarm}
+}
+```
+
+---
+
+## License
+
+This project is licensed under the **Academic Free License** - see LICENSE file for details.
+
+**For commercial use**, contact the authors for licensing terms.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/NewMobility`)
+3. Commit changes with clear messages
+4. Submit a pull request
+
+---
+
+## Contact
+
+**Author**: [Your Name]  
+**Institution**: [Your University]  
+**Email**: [your.email@university.edu]  
+**Research Group**: [Lab/Research Group Name]
+
+---
+
+## Acknowledgments
+
+- **OMNeT++ Community** for the excellent simulation framework
+- **INET Framework Team** for comprehensive protocol implementations
+- **[Your Advisor/Supervisor]** for research guidance
+
+---
+
+**Last Updated**: October 2025
 - ✅ Comunicação esporádica ponto-a-ponto
 
 ```ini

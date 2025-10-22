@@ -1,3 +1,3 @@
-package drone.swarm.simulations;
+package simulations;
 
 @license(LGPL);
