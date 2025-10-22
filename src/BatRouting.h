@@ -1,40 +1,43 @@
 //===================================================================================
 // BatRouting.h - Bat Algorithm Routing Protocol for FANETs
 //===================================================================================
-// Bio-inspired routing using frequency, loudness, and pulse rate for route
-// optimization in drone swarm networks.
+// Bio-inspired routing protocol using Bat Algorithm metaheuristics
+// Features: Frequency modulation, loudness adaptation, pulse rate control
+// Application: Multi-hop mesh routing in drone swarm networks
 //===================================================================================
 
 #ifndef __DRONE_SWARM_BATROUTING_H_
 #define __DRONE_SWARM_BATROUTING_H_
 
 #include <omnetpp.h>
-#include "inet/transportlayer/contract/udp/UdpSocket.h"
 #include <vector>
 #include <map>
 
 using namespace omnetpp;
-using namespace inet;
 
-// Route information structure
+//-----------------------------------------------------------------------------------
+// Route Information Structure
+//-----------------------------------------------------------------------------------
 struct RouteInfo {
-    std::vector<int> path;
-    double fitness;
-    double hopCount;
-    double linkQuality;
-    double energyCost;
-    simtime_t lastUpdate;
+    std::vector<int> path;        // Sequence of node IDs forming the route
+    double fitness;               // Bat Algorithm fitness value
+    double hopCount;              // Number of hops in route
+    double linkQuality;           // Average link quality (0-1)
+    double energyCost;            // Estimated energy consumption
+    simtime_t lastUpdate;         // Timestamp of last update
     
     RouteInfo() : fitness(1e9), hopCount(0), linkQuality(0), energyCost(0) {}
 };
 
-// Route discovery packet
+//-----------------------------------------------------------------------------------
+// Route Discovery Packet (RREQ/RREP)
+//-----------------------------------------------------------------------------------
 class RouteDiscoveryPacket : public cMessage {
   public:
-    std::vector<int> visitedNodes;
-    int sourceId;
-    int destId;
-    double accumulatedFitness;
+    std::vector<int> visitedNodes;     // Path history (loop prevention)
+    int sourceId;                       // Route request originator
+    int destId;                         // Target destination
+    double accumulatedFitness;          // Cumulative fitness along path
     
     RouteDiscoveryPacket(const char *name=nullptr) : cMessage(name) {
         sourceId = -1;
@@ -48,7 +51,9 @@ class RouteDiscoveryPacket : public cMessage {
     }
 };
 
-// Data packet with routing information
+//-----------------------------------------------------------------------------------
+// Data Packet with Routing Information
+//-----------------------------------------------------------------------------------
 class DataPacket : public cMessage {
   public:
     int sourceId;
@@ -68,65 +73,63 @@ class DataPacket : public cMessage {
     }
 };
 
-class BatRouting : public cSimpleModule, public UdpSocket::ICallback
+//-----------------------------------------------------------------------------------
+// Bat Routing Module
+//-----------------------------------------------------------------------------------
+class BatRouting : public cSimpleModule
 {
   private:
-    // UDP socket for communication
-    UdpSocket socket;
+    // === Bat Algorithm Parameters ===
+    double frequencyMin, frequencyMax;       // Frequency range [0-2 Hz]
+    double currentLoudness, currentPulseRate; // Dynamic adaptation
+    double initialLoudness, initialPulseRate; // Initial values
+    double alpha, gamma;                      // Adaptation coefficients
     
-    // Bat Algorithm parameters
-    double frequencyMin, frequencyMax;
-    double currentLoudness, currentPulseRate;
-    double initialLoudness, initialPulseRate;
-    double alpha, gamma;
+    // === Routing Parameters ===
+    double routingUpdateInterval;            // Route discovery period
+    double hopCountWeight;                   // Fitness weight: hop count
+    double linkQualityWeight;                // Fitness weight: link quality
+    double energyWeight;                     // Fitness weight: energy
+    double mobilityWeight;                   // Fitness weight: mobility
+    int maxRoutesPerDestination;             // Max alternative routes
+    double routeTimeout;                     // Route expiration time
+    double communicationRange;               // Radio range (meters)
     
-    // Routing parameters
-    double routingUpdateInterval;
-    double hopCountWeight, linkQualityWeight;
-    double energyWeight, mobilityWeight;
-    int maxRoutesPerDestination;
-    double routeTimeout;
-    double communicationRange;
+    // === Route Table ===
+    std::map<int, std::vector<RouteInfo>> routeTable;  // dest -> routes[]
+    std::map<int, simtime_t> neighborLastSeen;         // neighbor -> timestamp
     
-    // Route table
-    std::map<int, std::vector<RouteInfo>> routeTable;
-    std::map<int, simtime_t> neighborLastSeen;
-    
-    // Statistics
+    // === Statistics ===
     simsignal_t routeDiscoveredSignal;
     simsignal_t packetRoutedSignal;
     
-    // Timers
+    // === State ===
     cMessage *routeUpdateTimer;
     int myNodeId;
     
   protected:
+    // === Lifecycle ===
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void finish() override;
     
-    // Routing functions
+    // === Routing Functions ===
     void discoverRoutes();
     void processRouteDiscovery(RouteDiscoveryPacket *pkt);
     void updateRouteTable(int dest, const RouteInfo &route);
     RouteInfo* selectBestRoute(int dest);
     void routeDataPacket(DataPacket *pkt);
     
-    // Bat Algorithm
+    // === Bat Algorithm ===
     double calculateRouteFitness(const RouteInfo &route);
     void optimizeRouteTable();
     void updateBatParameters();
     
-    // Helper functions
+    // === Helpers ===
     double calculateLinkQuality(int nodeA, int nodeB);
     double calculateNodeMobility(int nodeId);
     void broadcastRouteDiscovery(int destId);
     void cleanupExpiredRoutes();
-    
-    // UdpSocket::ICallback methods
-    virtual void socketDataArrived(UdpSocket *socket, Packet *packet) override;
-    virtual void socketErrorArrived(UdpSocket *socket, Indication *indication) override;
-    virtual void socketClosed(UdpSocket *socket) override;
     
   public:
     BatRouting();

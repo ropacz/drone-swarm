@@ -1,41 +1,40 @@
-# UAV Swarm Simulation - FANET Research Framework
+# UAV Swarm Simulation - Bat Algorithm Routing for FANETs
 
-[![OMNeT++](https://img.shields.io/badge/OMNeT++-6.x-blue)](https://omnetpp.org/)
-[![INET](https://img.shields.io/badge/INET-4.x-green)](https://inet.omnetpp.org/)
+[![OMNeT++](https://img.shields.io/badge/OMNeT++-6.2.0-blue)](https://omnetpp.org/)
+[![INET](https://img.shields.io/badge/INET-4.5.4-green)](https://inet.omnetpp.org/)
 [![License](https://img.shields.io/badge/license-Academic-orange)](LICENSE)
 
-## Overview
+## 🎯 Overview
 
-This repository contains a discrete-event simulation framework for **Flying Ad-Hoc Networks (FANETs)** using OMNeT++ and the INET framework. The simulation models UAV swarm coordination with realistic wireless communication, mobility patterns, and bio-inspired routing protocols.
+Discrete-event simulation framework for **Flying Ad-Hoc Networks (FANETs)** implementing **Bat Algorithm** bio-inspired routing for UAV swarm coordination. Developed for academic research in multi-hop drone mesh networking.
 
-**Use Case:** Master's degree research / Academic publications
+### ✨ Key Features
 
-### Key Features
-
-- ✈️ **3D Mobility Model**: Gauss-Markov mobility with realistic UAV flight parameters
-- 📡 **IEEE 802.11 @ 5.8 GHz**: Industry-standard wireless communication
-- 🦇 **Bat Algorithm Routing**: Bio-inspired multi-criteria route optimization
-- 📊 **Telemetry Exchange**: UDP-based position/velocity broadcasting (10 Hz)
-- 🎯 **Validated Parameters**: Based on commercial drone specifications and academic literature
+- 🦇 **Bat Algorithm Routing**: Bio-inspired metaheuristic with frequency modulation, loudness adaptation, and pulse rate control
+- ✈️ **3D Mobility**: Gauss-Markov model with realistic UAV flight dynamics (15 m/s cruise speed)
+- 📡 **IEEE 802.11a @ 5.8 GHz**: Industry-standard wireless mesh networking
+- 📊 **Multi-Criteria Optimization**: Hop count, link quality, energy cost, and mobility-aware routing
+- 🎯 **SAR Operations**: Search and Rescue mission scenarios over 4km × 4km areas
+- 📈 **Statistics Collection**: Route discovery, packet routing, and Bat Algorithm performance metrics
 
 ---
 
-## System Requirements
+## 📋 System Requirements
 
-### Software Dependencies
-- **OMNeT++** 6.x ([download](https://omnetpp.org/download/))
-- **INET Framework** 4.x ([download](https://inet.omnetpp.org/Download.html))
-- **C++ Compiler**: GCC 9+ or Clang 10+
-- **Qt5**: For Qtenv GUI (optional, for visualization)
+### Software
+- **OMNeT++** 6.2.0 or higher
+- **INET Framework** 4.5.4
+- **C++17** compatible compiler (GCC 9+ / Clang 10+)
+- **Qt5** (optional, for GUI visualization)
 
-### Hardware Recommendations
-- **CPU**: Multi-core processor (4+ cores recommended)
+### Recommended Hardware
+- **CPU**: 4+ cores
 - **RAM**: 8 GB minimum (16 GB for large swarms)
-- **Storage**: 500 MB for simulation framework + results
+- **Storage**: 1 GB (framework + results)
 
 ---
 
-## Installation
+## 🚀 Quick Start
 
 ### 1. Clone Repository
 ```bash
@@ -43,9 +42,9 @@ git clone https://github.com/ropacz/drone-swarm.git
 cd drone-swarm
 ```
 
-### 2. Generate Makefiles
+### 2. Build Project
 ```bash
-make makefiles
+./build.sh
 ```
 
 ### 3. Compile

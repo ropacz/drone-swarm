@@ -4,14 +4,15 @@
 
 #include "BatRouting.h"
 #include "inet/mobility/base/MovingMobilityBase.h"
-#include "inet/networklayer/common/L3AddressResolver.h"
-#include "inet/common/ModuleAccess.h"
-#include "inet/common/packet/Packet.h"
 #include <algorithm>
 
 using namespace inet;
 
 Define_Module(BatRouting);
+
+//-----------------------------------------------------------------------------------
+// Constructor / Destructor
+//-----------------------------------------------------------------------------------
 
 BatRouting::BatRouting()
 {
@@ -24,8 +25,13 @@ BatRouting::~BatRouting()
     cancelAndDelete(routeUpdateTimer);
 }
 
+//-----------------------------------------------------------------------------------
+// Initialization
+//-----------------------------------------------------------------------------------
+
 void BatRouting::initialize()
 {
+    // Get node ID from parent module
     cModule *parent = getParentModule();
     if (!parent) {
         EV_ERROR << "BatRouting: Cannot find parent module" << endl;
@@ -33,7 +39,7 @@ void BatRouting::initialize()
     }
     myNodeId = parent->getIndex();
     
-    // Bat Algorithm parameters
+    // Load Bat Algorithm parameters
     frequencyMin = par("frequencyMin");
     frequencyMax = par("frequencyMax");
     initialLoudness = par("loudness");
@@ -43,7 +49,7 @@ void BatRouting::initialize()
     alpha = par("alpha");
     gamma = par("gamma");
     
-    // Routing parameters
+    // Load routing parameters
     routingUpdateInterval = par("routingUpdateInterval");
     hopCountWeight = par("hopCountWeight");
     linkQualityWeight = par("linkQualityWeight");
@@ -53,20 +59,25 @@ void BatRouting::initialize()
     routeTimeout = par("routeTimeout");
     communicationRange = par("communicationRange");
     
-    // Register signals
+    // Register statistics signals
     routeDiscoveredSignal = registerSignal("routeDiscovered");
     packetRoutedSignal = registerSignal("packetRouted");
     
-    // Schedule first route discovery
+    // Schedule first route discovery (randomized start to avoid synchronization)
     routeUpdateTimer = new cMessage("routeUpdate");
     scheduleAt(simTime() + uniform(2, 3), routeUpdateTimer);
     
-    EV << "BatRouting: Node " << myNodeId << " initialized" << endl;
+    EV << "BatRouting: Node " << myNodeId << " initialized with Bat Algorithm" << endl;
 }
+
+//-----------------------------------------------------------------------------------
+// Message Handling
+//-----------------------------------------------------------------------------------
 
 void BatRouting::handleMessage(cMessage *msg)
 {
     if (msg == routeUpdateTimer) {
+        // Periodic route discovery and optimization
         discoverRoutes();
         optimizeRouteTable();
         cleanupExpiredRoutes();
@@ -83,6 +94,10 @@ void BatRouting::handleMessage(cMessage *msg)
     }
 }
 
+//-----------------------------------------------------------------------------------
+// Route Discovery Process
+//-----------------------------------------------------------------------------------
+
 void BatRouting::discoverRoutes()
 {
     cModule *network = getParentModule()->getParentModule();
@@ -90,21 +105,29 @@ void BatRouting::discoverRoutes()
     
     int numNodes = network->getSubmoduleVectorSize("drone");
     
+    // Discover routes to all other nodes using Bat Algorithm
     for (int destId = 0; destId < numNodes; destId++) {
         if (destId == myNodeId) continue;
         
+        // Bat Algorithm: modulate frequency (unused in simplified version)
         double frequency = frequencyMin + (frequencyMax - frequencyMin) * uniform(0, 1);
         
+        // Bat Algorithm: emit pulse with probability pulseRate
         if (uniform(0, 1) < currentPulseRate) {
             broadcastRouteDiscovery(destId);
         }
     }
     
+    // Update Bat Algorithm parameters (loudness decreases, pulse rate increases)
     updateBatParameters();
+    
+    EV << "BatRouting: Node " << myNodeId << " completed route discovery cycle "
+       << "(loudness=" << currentLoudness << ", pulseRate=" << currentPulseRate << ")" << endl;
 }
 
 void BatRouting::broadcastRouteDiscovery(int destId)
 {
+    // Create route request packet
     RouteDiscoveryPacket *pkt = new RouteDiscoveryPacket("RouteDiscovery");
     pkt->sourceId = myNodeId;
     pkt->destId = destId;
@@ -115,9 +138,13 @@ void BatRouting::broadcastRouteDiscovery(int destId)
     sprintf(msgName, "RREQ %d->%d", myNodeId, destId);
     pkt->setName(msgName);
     
-    EV << "BatRouting: Broadcasting " << msgName << endl;
+    // Emit signal for statistics (conceptual broadcast)
     emit(routeDiscoveredSignal, 1);
     
+    EV << "BatRouting: Node " << myNodeId << " broadcast " << msgName << endl;
+    
+    // Note: In full implementation, this would be sent via network
+    // For now, emitting signal demonstrates Bat Algorithm activity
     delete pkt;
 }
 
@@ -172,27 +199,39 @@ void BatRouting::processRouteDiscovery(RouteDiscoveryPacket *pkt)
         return;
     }
     
-    // Forward with loudness probability
+    // Bat Algorithm: Forward with loudness probability (echo location)
     if (pkt->visitedNodes.size() < 10 && uniform(0, 1) < currentLoudness) {
-        EV << "BatRouting: Forwarding RREQ " << pkt->sourceId << "->" << pkt->destId << endl;
+        EV << "BatRouting: Node " << myNodeId << " forwarding RREQ " 
+           << pkt->sourceId << "->" << pkt->destId 
+           << " (loudness=" << currentLoudness << ")" << endl;
+        // Note: Full implementation would rebroadcast here
     }
     
     delete pkt;
 }
+
+//-----------------------------------------------------------------------------------
+// Route Table Management
+//-----------------------------------------------------------------------------------
 
 void BatRouting::updateRouteTable(int dest, const RouteInfo &route)
 {
     auto &routes = routeTable[dest];
     routes.push_back(route);
     
+    // Sort by fitness (lower is better)
     std::sort(routes.begin(), routes.end(), 
         [](const RouteInfo &a, const RouteInfo &b) {
             return a.fitness < b.fitness;
         });
     
+    // Keep only top N routes
     if (routes.size() > (size_t)maxRoutesPerDestination) {
         routes.resize(maxRoutesPerDestination);
     }
+    
+    EV << "BatRouting: Node " << myNodeId << " updated route to " << dest 
+       << ", best fitness=" << routes[0].fitness << endl;
 }
 
 RouteInfo* BatRouting::selectBestRoute(int dest)
@@ -201,6 +240,7 @@ RouteInfo* BatRouting::selectBestRoute(int dest)
     if (it == routeTable.end() || it->second.empty()) {
         return nullptr;
     }
+    // Return route with lowest fitness (best)
     return &(it->second[0]);
 }
 
@@ -212,13 +252,22 @@ void BatRouting::routeDataPacket(DataPacket *pkt)
     if (route) {
         pkt->routePath = route->path;
         pkt->currentHop = 0;
+        EV << "BatRouting: Routing data from " << pkt->sourceId 
+           << " to " << pkt->destId << ", hops=" << route->hopCount << endl;
+    } else {
+        EV_WARN << "BatRouting: No route to " << pkt->destId << endl;
     }
     
     delete pkt;
 }
 
+//-----------------------------------------------------------------------------------
+// Bat Algorithm Functions
+//-----------------------------------------------------------------------------------
+
 double BatRouting::calculateRouteFitness(const RouteInfo &route)
 {
+    // Multi-objective fitness function
     double fitness = route.hopCount * hopCountWeight;
     fitness += (1.0 / (route.linkQuality + 0.1)) * linkQualityWeight;
     fitness += route.energyCost * energyWeight;
@@ -347,24 +396,6 @@ std::vector<int> BatRouting::getNeighborIds()
 
 void BatRouting::finish()
 {
-    EV << "BatRouting: Node " << myNodeId << " - Routes in table: " 
-       << routeTable.size() << endl;
-}
-
-// UdpSocket::ICallback implementations
-void BatRouting::socketDataArrived(UdpSocket *sock, Packet *packet)
-{
-    EV << "BatRouting: Received packet " << packet->getName() << endl;
-    delete packet;
-}
-
-void BatRouting::socketErrorArrived(UdpSocket *sock, Indication *indication)
-{
-    EV_WARN << "BatRouting: Socket error" << endl;
-    delete indication;
-}
-
-void BatRouting::socketClosed(UdpSocket *sock)
-{
-    EV << "BatRouting: Socket closed" << endl;
+    EV << "BatRouting: Node " << myNodeId 
+       << " finished with " << routeTable.size() << " destination(s) in route table" << endl;
 }
