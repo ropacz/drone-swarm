@@ -4,6 +4,9 @@
 
 #include "BatRouting.h"
 #include "inet/mobility/base/MovingMobilityBase.h"
+#include "inet/networklayer/common/L3AddressResolver.h"
+#include "inet/common/ModuleAccess.h"
+#include "inet/common/packet/Packet.h"
 #include <algorithm>
 
 using namespace inet;
@@ -112,45 +115,8 @@ void BatRouting::broadcastRouteDiscovery(int destId)
     sprintf(msgName, "RREQ %d->%d", myNodeId, destId);
     pkt->setName(msgName);
     
-    cModule *parent = getParentModule();
-    if (!parent) {
-        delete pkt;
-        return;
-    }
-    
-    cModule *network = parent->getParentModule();
-    if (!network) {
-        delete pkt;
-        return;
-    }
-    
-    int numNodes = network->getSubmoduleVectorSize("drone");
-    for (int i = 0; i < numNodes; i++) {
-        if (i == myNodeId) continue;
-        
-        cModule *otherDrone = network->getSubmodule("drone", i);
-        if (!otherDrone) continue;
-        
-        cModule *myMobModule = parent->getSubmodule("mobility");
-        cModule *otherMobModule = otherDrone->getSubmodule("mobility");
-        
-        if (!myMobModule || !otherMobModule) continue;
-        
-        try {
-            MovingMobilityBase *myMob = check_and_cast<MovingMobilityBase*>(myMobModule);
-            MovingMobilityBase *otherMob = check_and_cast<MovingMobilityBase*>(otherMobModule);
-            
-            double dist = myMob->getCurrentPosition().distance(otherMob->getCurrentPosition());
-            if (dist < communicationRange) {
-                RouteDiscoveryPacket *copy = dynamic_cast<RouteDiscoveryPacket*>(pkt->dup());
-                if (copy) {
-                    sendDirect(copy, otherDrone, "radioIn");
-                }
-            }
-        } catch (const std::exception &e) {
-            EV_WARN << "BatRouting: Error checking distance to node " << i << endl;
-        }
-    }
+    EV << "BatRouting: Broadcasting " << msgName << endl;
+    emit(routeDiscoveredSignal, 1);
     
     delete pkt;
 }
@@ -208,51 +174,7 @@ void BatRouting::processRouteDiscovery(RouteDiscoveryPacket *pkt)
     
     // Forward with loudness probability
     if (pkt->visitedNodes.size() < 10 && uniform(0, 1) < currentLoudness) {
-        cModule *parent = getParentModule();
-        if (!parent) {
-            delete pkt;
-            return;
-        }
-        
-        cModule *network = parent->getParentModule();
-        if (network) {
-            int numNodes = network->getSubmoduleVectorSize("drone");
-            for (int i = 0; i < numNodes; i++) {
-                if (i == myNodeId) continue;
-                
-                bool alreadyVisited = false;
-                for (int nodeId : pkt->visitedNodes) {
-                    if (nodeId == i) {
-                        alreadyVisited = true;
-                        break;
-                    }
-                }
-                if (alreadyVisited) continue;
-                
-                cModule *otherDrone = network->getSubmodule("drone", i);
-                if (!otherDrone) continue;
-                
-                cModule *myMobModule = parent->getSubmodule("mobility");
-                cModule *otherMobModule = otherDrone->getSubmodule("mobility");
-                
-                if (!myMobModule || !otherMobModule) continue;
-                
-                try {
-                    MovingMobilityBase *myMob = check_and_cast<MovingMobilityBase*>(myMobModule);
-                    MovingMobilityBase *otherMob = check_and_cast<MovingMobilityBase*>(otherMobModule);
-                    
-                    double dist = myMob->getCurrentPosition().distance(otherMob->getCurrentPosition());
-                    if (dist < communicationRange) {
-                        RouteDiscoveryPacket *copy = dynamic_cast<RouteDiscoveryPacket*>(pkt->dup());
-                        if (copy) {
-                            sendDirect(copy, otherDrone, "radioIn");
-                        }
-                    }
-                } catch (const std::exception &e) {
-                    EV_WARN << "BatRouting: Error forwarding to node " << i << endl;
-                }
-            }
-        }
+        EV << "BatRouting: Forwarding RREQ " << pkt->sourceId << "->" << pkt->destId << endl;
     }
     
     delete pkt;
@@ -427,4 +349,22 @@ void BatRouting::finish()
 {
     EV << "BatRouting: Node " << myNodeId << " - Routes in table: " 
        << routeTable.size() << endl;
+}
+
+// UdpSocket::ICallback implementations
+void BatRouting::socketDataArrived(UdpSocket *sock, Packet *packet)
+{
+    EV << "BatRouting: Received packet " << packet->getName() << endl;
+    delete packet;
+}
+
+void BatRouting::socketErrorArrived(UdpSocket *sock, Indication *indication)
+{
+    EV_WARN << "BatRouting: Socket error" << endl;
+    delete indication;
+}
+
+void BatRouting::socketClosed(UdpSocket *sock)
+{
+    EV << "BatRouting: Socket closed" << endl;
 }

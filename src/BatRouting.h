@@ -9,10 +9,12 @@
 #define __DRONE_SWARM_BATROUTING_H_
 
 #include <omnetpp.h>
+#include "inet/transportlayer/contract/udp/UdpSocket.h"
 #include <vector>
 #include <map>
 
 using namespace omnetpp;
+using namespace inet;
 
 // Route information structure
 struct RouteInfo {
@@ -66,9 +68,12 @@ class DataPacket : public cMessage {
     }
 };
 
-class BatRouting : public cSimpleModule
+class BatRouting : public cSimpleModule, public UdpSocket::ICallback
 {
   private:
+    // UDP socket for communication
+    UdpSocket socket;
+    
     // Bat Algorithm parameters
     double frequencyMin, frequencyMax;
     double currentLoudness, currentPulseRate;
@@ -117,6 +122,11 @@ class BatRouting : public cSimpleModule
     double calculateNodeMobility(int nodeId);
     void broadcastRouteDiscovery(int destId);
     void cleanupExpiredRoutes();
+    
+    // UdpSocket::ICallback methods
+    virtual void socketDataArrived(UdpSocket *socket, Packet *packet) override;
+    virtual void socketErrorArrived(UdpSocket *socket, Indication *indication) override;
+    virtual void socketClosed(UdpSocket *socket) override;
     
   public:
     BatRouting();

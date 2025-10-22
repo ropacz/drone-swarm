@@ -4,7 +4,9 @@
 
 package drone.swarm;
 
-simple BatRouting
+import inet.applications.contract.IApp;
+
+simple BatRouting like IApp
 {
     parameters:
         @class(BatRouting);
@@ -36,5 +38,6 @@ simple BatRouting
         @statistic[packetRouted](title="Packets Routed"; record=count,vector);
         
     gates:
-        input radioIn @directIn;
+        input socketIn;
+        output socketOut;
 }

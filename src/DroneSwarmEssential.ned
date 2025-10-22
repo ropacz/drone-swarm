@@ -49,6 +49,8 @@ module Drone extends AdhocHost
         }
         
     connections allowunconnected:
+        batRouting.socketOut --> at.in++;
+        batRouting.socketIn <-- at.out++;
 }
 
 //===================================================================================
