@@ -10,7 +10,7 @@ cleanall: checkmakefiles
 	rm -f src/Makefile
 
 makefiles:
-	cd src && opp_makemake -f --deep
+	cd src && opp_makemake -f --deep -O ../out -KINET_PROJ=/Users/rodrigo/omnetpp-workspace/inet-4.5.4 -DINET_IMPORT -I/Users/rodrigo/omnetpp-workspace/inet-4.5.4/src -L/Users/rodrigo/omnetpp-workspace/inet-4.5.4/src -lINET
 
 checkmakefiles:
 	@if [ ! -f src/Makefile ]; then \

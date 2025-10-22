@@ -29,7 +29,7 @@ echo ""
 # Run with Qtenv inside opp_env shell
 opp_env shell omnetpp-6.2.0 << EOF
 cd /Users/rodrigo/omnetpp-workspace/drone-sar/simulations
-../out/clang-release/src/drone-sar -u Qtenv -c $CONFIG \
+/Users/rodrigo/omnetpp-workspace/out/clang-release/src/drone-sar -u Qtenv -c $CONFIG \
     -n .:../src:\$INET_PROJ/src \
     --ned-path=.:../src:\$INET_PROJ/src \
     --image-path=\$INET_PROJ/images \

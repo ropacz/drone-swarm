@@ -30,7 +30,7 @@ import inet.node.inet.AdhocHost;
 //===================================================================================
 // Mobile node with mesh routing and wireless communication
 // Base: INET AdhocHost (standard for MANET/FANET nodes)
-// Routing: AODV (Ad-hoc On-Demand Distance Vector) for multi-hop mesh
+// Routing: Bat Algorithm-based routing for optimized multi-hop mesh
 //===================================================================================
 module Drone extends AdhocHost
 {
@@ -42,6 +42,13 @@ module Drone extends AdhocHost
         hasIpv4 = true;
         hasTcp = false;
         @networkNode();
+        
+    submodules:
+        batRouting: BatRouting {
+            @display("p=825,226");
+        }
+        
+    connections allowunconnected:
 }
 
 //===================================================================================

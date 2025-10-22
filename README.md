@@ -6,7 +6,7 @@
 
 ## Overview
 
-This repository contains a discrete-event simulation framework for **Flying Ad-Hoc Networks (FANETs)** using OMNeT++ and the INET framework. The simulation models UAV swarm coordination with realistic wireless communication, mobility patterns, and network protocols.
+This repository contains a discrete-event simulation framework for **Flying Ad-Hoc Networks (FANETs)** using OMNeT++ and the INET framework. The simulation models UAV swarm coordination with realistic wireless communication, mobility patterns, and bio-inspired routing protocols.
 
 **Use Case:** Master's degree research / Academic publications
 
@@ -14,7 +14,7 @@ This repository contains a discrete-event simulation framework for **Flying Ad-H
 
 - ✈️ **3D Mobility Model**: Gauss-Markov mobility with realistic UAV flight parameters
 - 📡 **IEEE 802.11 @ 5.8 GHz**: Industry-standard wireless communication
-- 🗺️ **Proactive Routing**: OLSR-based mesh networking for swarms
+- 🦇 **Bat Algorithm Routing**: Bio-inspired multi-criteria route optimization
 - 📊 **Telemetry Exchange**: UDP-based position/velocity broadcasting (10 Hz)
 - 🎯 **Validated Parameters**: Based on commercial drone specifications and academic literature
 
@@ -50,7 +50,9 @@ make makefiles
 
 ### 3. Compile
 ```bash
-make
+./rebuild.sh  # Clean build with INET dependencies
+# or
+./build.sh    # Incremental build
 ```
 
 ---
@@ -59,20 +61,12 @@ make
 
 ### Quick Start (GUI Mode)
 ```bash
-./run.sh [ConfigName]
-```
-
-**Examples:**
-```bash
-./run.sh Base         # 10 drones, standard parameters
-./run.sh Small        # 5 drones
-./run.sh Large        # 20 drones
-./run.sh Formation    # Grid formation start
+./run.sh DroneSwarm5km
 ```
 
 ### Console Mode (Faster)
 ```bash
-./run-cmdenv.sh [ConfigName]
+./run-cmdenv.sh DroneSwarm5km
 ```
 
 ### Output Files
@@ -83,21 +77,48 @@ Results are saved in `simulations/results/`:
 
 ---
 
+## Routing Protocol - Bat Algorithm
+
+The simulation uses a **bio-inspired routing protocol** based on the Bat Algorithm, optimizing routes using:
+
+- **Frequency**: Diversity in route exploration
+- **Loudness**: Exploitation vs exploration balance
+- **Pulse Rate**: Route discovery probability
+
+### Multi-Criteria Optimization
+Routes are evaluated based on:
+- Hop count (weight: 1.0)
+- Link quality (weight: 1.5)
+- Energy cost (weight: 1.0)
+- Node mobility (weight: 0.8)
+
+### Configuration
+Edit `src/omnetpp.ini` to adjust Bat Algorithm parameters:
+
+```ini
+*.drone[*].batRouting.pulseRate = 0.5          # Discovery probability
+*.drone[*].batRouting.loudness = 0.9           # Exploration rate
+*.drone[*].batRouting.routingUpdateInterval = 5s
+*.drone[*].batRouting.maxRoutesPerDestination = 3
+```
+
+---
+
 ## Simulation Parameters
 
 ### Network Topology
 | Parameter | Value | Justification |
 |-----------|-------|---------------|
-| Swarm size | 5-20 UAVs | Typical research range [1] |
-| Operational area | 1 km² | VLOS regulations [2] |
-| Altitude range | 50-120 m | FAA Part 107 / ANAC RBAC-E 94 [3] |
+| Swarm size | 10 UAVs | Balanced for 4 km² area |
+| Operational area | 4 km² | SAR operation zone |
+| Altitude range | 50-120 m | FAA Part 107 compliant |
 | GCS nodes | 1 | Single ground control station |
 
 ### Mobility Model (Gauss-Markov)
 | Parameter | Value | Reference |
 |-----------|-------|-----------|
-| Cruise speed | 15 m/s (54 km/h) | DJI Mavic 3 specs [4] |
-| Alpha (correlation) | 0.8 | Smooth coordinated movement [5] |
+| Cruise speed | 15 m/s (54 km/h) | DJI Mavic 3 specs |
+| Alpha (correlation) | 0.9 | Smooth coordinated movement |
 | Update interval | 500 ms | Realistic trajectory updates |
 
 ### Wireless Communication
